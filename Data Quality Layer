@@ -1,0 +1,11 @@
+Practice Pipeline 2 — Data Quality Layer
+Scenario
+You must validate:
+No negative prices
+No null customer_id
+Order_date not in future
+
+If invalid:
+Send to quarantine table
+Log count
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
