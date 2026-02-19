@@ -1,0 +1,14 @@
+🚀 Practice Pipeline 4 — Large File (10GB)
+
+Constraint:
+Cannot load fully into memory.
+
+Requirements:
+
+Chunk processing
+
+Aggregation before load
+
+Batch inserts
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
