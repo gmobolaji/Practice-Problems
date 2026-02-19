@@ -1,0 +1,13 @@
+Practice Pipeline 3 — SCD Type 2 Customer Dimension
+
+Build dimension table with:
+
+customer_id
+address
+start_date
+end_date
+current_flag
+
+
+Handle updates correctly.
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
