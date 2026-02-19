@@ -1,0 +1,10 @@
+🚀 Practice Pipeline 1 — Incremental Sales Pipeline
+Scenario--
+You receive daily sales files.
+Requirements:
+Load only new records
+Store watermark timestamp
+Append to warehouse
+Bonus:
+Handle late-arriving data
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
