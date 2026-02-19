@@ -1,0 +1,14 @@
+🚀 Practice Pipeline 5 — Real-Time Streaming
+
+Simulate:
+
+Orders coming in every second
+
+Store in micro-batches
+
+Compute rolling revenue
+
+Use:
+
+PySpark Structured Streaming
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
