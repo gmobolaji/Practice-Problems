@@ -8,3 +8,136 @@ Append to warehouse
 Bonus:
 Handle late-arriving data
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import pandas as pd
+import sqlite3
+import glob
+import os
+import logging
+from datetime import datetime
+
+# -------------------------------
+# CONFIGURATION
+# -------------------------------
+
+DATA_PATH = r"C:\Users\Your\Path"
+DB_NAME = "Retail.db"
+LOG_FILE = "etl.log"
+
+# -------------------------------
+# LOGGING CONFIG
+# -------------------------------
+
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s"
+)
+
+# -------------------------------
+# EXTRACT
+# -------------------------------
+
+def extract_files(path, extension, reader_function):
+    try:
+        files = glob.glob(os.path.join(path, f"*.{extension}"))
+        if not files:
+            raise FileNotFoundError(f"No .{extension} files found")
+
+        df = pd.concat([reader_function(f) for f in files], ignore_index=True)
+        logging.info(f"Extracted {len(df)} rows from {extension} files")
+        return df
+
+    except Exception as e:
+        logging.error(f"Extraction failed for {extension}: {e}")
+        raise
+
+
+def extract_all(path):
+    return {
+        "customers": extract_files(path, "csv", pd.read_csv),
+        "orders": extract_files(path, "json", pd.read_json),
+        "products": extract_files(path, "xlsx", pd.read_excel),
+        "payments": extract_files(path, "parquet", pd.read_parquet),
+    }
+
+# -------------------------------
+# TRANSFORM
+# -------------------------------
+
+def transform(data):
+
+    try:
+        customers = data["customers"]
+        orders = data["orders"]
+        products = data["products"]
+        payments = data["payments"]
+
+        # Schema validation
+        required_cols = ["order_id", "customer_id", "product_id"]
+        for col in required_cols:
+            if col not in orders.columns:
+                raise ValueError(f"Missing required column: {col}")
+
+        # Convert date
+        orders["order_date"] = pd.to_datetime(
+            orders["order_date"], errors="coerce"
+        )
+
+        # Remove invalid records
+        orders = orders.dropna(subset=["customer_id"])
+        orders = orders.drop_duplicates(subset="order_id")
+
+        # Merge
+        df = (
+            orders
+            .merge(customers, on="customer_id", how="left")
+            .merge(products, on="product_id", how="left")
+            .merge(payments, on="order_id", how="left")
+        )
+
+        logging.info(f"Transformed dataset with {len(df)} rows")
+        return df
+
+    except Exception as e:
+        logging.error(f"Transformation failed: {e}")
+        raise
+
+# -------------------------------
+# LOAD
+# -------------------------------
+
+def load_to_db(df, db_name, table_name="fact_sales"):
+    try:
+        conn = sqlite3.connect(db_name)
+
+        df.to_sql(
+            table_name,
+            conn,
+            if_exists="replace",
+            index=False
+        )
+
+        conn.close()
+        logging.info(f"Loaded {len(df)} rows into {table_name}")
+
+    except Exception as e:
+        logging.error(f"Load failed: {e}")
+        raise
+
+# -------------------------------
+# MAIN PIPELINE
+# -------------------------------
+
+def run_pipeline():
+    logging.info("Pipeline started")
+
+    data = extract_all(DATA_PATH)
+    transformed_df = transform(data)
+    load_to_db(transformed_df, DB_NAME)
+
+    logging.info("Pipeline completed successfully")
+
+
+if __name__ == "__main__":
+    run_pipeline()
